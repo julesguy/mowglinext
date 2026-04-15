@@ -96,12 +96,12 @@ install_debug_tools() {
       $SUDO apt install -y \
         htop ncdu lsof strace gdb minicom screen picocom \
         tmux bat fd-find ripgrep jq yq \
-        nmap iptraf-ng usbutils i2c-tools
+        nmap iptraf-ng usbutils i2c-tools openocd
       ;;
     2)
       info "Installing essential debug/tooling set..."
       $SUDO apt install -y \
-        htop ncdu git tmux minicom screen jq usbutils
+        htop ncdu git tmux minicom screen jq usbutils openocd
       ;;
     3)
       info "No debug/dev tools installed"
@@ -110,6 +110,7 @@ install_debug_tools() {
       warn "Invalid choice. No debug/dev tools installed."
       ;;
   esac
+
 }
 
 install_optional_tools() {

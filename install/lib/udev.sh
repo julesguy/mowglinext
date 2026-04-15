@@ -91,6 +91,23 @@ install_udev_rules() {
 
   rm -f "$tmpfile"
 
+  # ST-Link / OpenOCD rules for firmware flashing from GUI
+  local openocd_rules="/usr/share/openocd/contrib/60-openocd.rules"
+  if [ -f "$openocd_rules" ]; then
+    if [ ! -f /etc/udev/rules.d/60-openocd.rules ] || ! cmp -s "$openocd_rules" /etc/udev/rules.d/60-openocd.rules; then
+      $SUDO cp "$openocd_rules" /etc/udev/rules.d/60-openocd.rules
+      $SUDO udevadm control --reload-rules
+      $SUDO udevadm trigger
+      info "OpenOCD udev rules installed (ST-Link)"
+    fi
+  fi
+
+  # plugdev group needed for ST-Link access
+  if ! groups "$USER" | grep -qw plugdev 2>/dev/null; then
+    $SUDO usermod -aG plugdev "$USER"
+    info "Added $USER to plugdev group (active after next login)"
+  fi
+
   # Verify symlinks were created — UART devices may not exist until reboot
   local needs_reboot=false
 
