@@ -6,8 +6,8 @@
 
 # ── Global configuration ────────────────────────────────────────────────────
 
-REPO_URL="https://github.com/julesguy/mowglinext.git"
-REPO_BRANCH="dev"
+: "${REPO_URL:=https://github.com/julesguy/mowglinext.git}"
+: "${REPO_BRANCH:=dev}"
 REPO_DIR="${MOWGLI_HOME:-$HOME/mowglinext}"
 DOCKER_SUBDIR="install"
 INSTALL_DIR="${REPO_DIR}/${DOCKER_SUBDIR}"
