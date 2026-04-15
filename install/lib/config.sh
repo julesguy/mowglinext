@@ -6,20 +6,20 @@
 
 # ── Global configuration ────────────────────────────────────────────────────
 
-REPO_URL="https://github.com/Mowglifrenchtouch/mowglinext.git"
-REPO_BRANCH="main"
+REPO_URL="https://github.com/julesguy/mowglinext.git"
+REPO_BRANCH="dev"
 REPO_DIR="${MOWGLI_HOME:-$HOME/mowglinext}"
 DOCKER_SUBDIR="install"
 INSTALL_DIR="${REPO_DIR}/${DOCKER_SUBDIR}"
 UDEV_RULES_FILE="/etc/udev/rules.d/50-mowgli.rules"
 
-MOWGLI_ROS2_IMAGE_DEFAULT="ghcr.io/cedbossneo/mowglinext/mowgli-ros2:main"
-GPS_IMAGE_DEFAULT="ghcr.io/cedbossneo/mowglinext/gps:main"
-LIDAR_LDLIDAR_IMAGE_DEFAULT="ghcr.io/cedbossneo/mowglinext/lidar-ldlidar:main"
-LIDAR_RPLIDAR_IMAGE_DEFAULT="ghcr.io/cedbossneo/mowglinext/lidar-rplidar:main"
-LIDAR_STL27L_IMAGE_DEFAULT="ghcr.io/cedbossneo/mowglinext/lidar-stl27l:main"
-MAVROS_IMAGE_DEFAULT="ghcr.io/cedbossneo/mowglinext/mavros:main"
-GUI_IMAGE_DEFAULT="ghcr.io/cedbossneo/mowglinext/mowglinext-gui:main"
+MOWGLI_ROS2_IMAGE_DEFAULT="ghcr.io/julesguy/mowglinext/mowgli-ros2:dev"
+GPS_IMAGE_DEFAULT="ghcr.io/julesguy/mowglinext/gps:dev"
+LIDAR_LDLIDAR_IMAGE_DEFAULT="ghcr.io/julesguy/mowglinext/lidar-ldlidar:dev"
+LIDAR_RPLIDAR_IMAGE_DEFAULT="ghcr.io/julesguy/mowglinext/lidar-rplidar:dev"
+LIDAR_STL27L_IMAGE_DEFAULT="ghcr.io/julesguy/mowglinext/lidar-stl27l:dev"
+MAVROS_IMAGE_DEFAULT="ghcr.io/julesguy/mowglinext/mavros:dev"
+GUI_IMAGE_DEFAULT="ghcr.io/julesguy/mowglinext/mowglinext-gui:dev"
 
 CHECK_ONLY=false
 CLI_PRESET=false
