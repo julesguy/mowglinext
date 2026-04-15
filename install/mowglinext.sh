@@ -69,6 +69,8 @@ main() {
     progress_run 2 "$TOTAL_STEPS" "Installing Docker" \
       'install_docker'
 
+    setup_docker_sudo
+
     progress_run 3 "$TOTAL_STEPS" "Enabling UARTs" \
       'enable_all_platform_uarts && generate_rc_local'
 
@@ -109,6 +111,7 @@ main() {
     fi
 
     cd "$INSTALL_DIR"
+    setup_docker_sudo
     echo -e "${DIM}Running diagnostics on $INSTALL_DIR${NC}"
   fi
 

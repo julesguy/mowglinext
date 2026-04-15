@@ -21,6 +21,18 @@ install_docker() {
   if ! groups "$USER" | grep -qw docker 2>/dev/null; then
     require_root_for "docker group"
     $SUDO usermod -aG docker "$USER"
-    warn "Added $USER to docker group — log out/in for it to take effect"
+    info "Added $USER to docker group (active after next login)"
+  fi
+}
+
+# Detect whether we need sudo to talk to the Docker daemon.
+# Must be called OUTSIDE progress_run (which uses a subshell) so that
+# DOCKER_SUDO is visible to the rest of the installer.
+setup_docker_sudo() {
+  if id -nG | grep -qw docker; then
+    DOCKER_SUDO=""
+  else
+    require_root_for "docker socket"
+    DOCKER_SUDO="$SUDO"
   fi
 }
