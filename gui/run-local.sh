@@ -39,7 +39,7 @@ if [ ${#missing[@]} -gt 0 ]; then
           ;;
         yarn)
           echo "Installing Yarn..."
-          corepack enable
+          sudo corepack enable
           ;;
       esac
     done
