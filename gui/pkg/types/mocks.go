@@ -108,6 +108,8 @@ func (m *MockRosProvider) Publish(_ string, _ string, _ interface{}) error {
 	return m.PublishErr
 }
 
+func (m *MockRosProvider) SetDockPose(_, _, _ float64) {}
+
 // Dispatch simulates delivering a message to all subscribers of a logical topic key.
 func (m *MockRosProvider) Dispatch(topic string, msg []byte) {
 	m.mu.Lock()

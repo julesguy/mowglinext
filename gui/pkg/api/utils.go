@@ -31,10 +31,13 @@ func unmarshalROSMessage[T any](reader io.ReadCloser, out T) error {
 	if err != nil {
 		return err
 	}
+	normalize := func(s string) string {
+		return strings.ToLower(strings.ReplaceAll(s, "_", ""))
+	}
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Result: out,
 		MatchName: func(mapKey, fieldName string) bool {
-			return strings.ToLower(fieldName) == strings.ToLower(mapKey)
+			return normalize(fieldName) == normalize(mapKey)
 		},
 	})
 	err = decoder.Decode(m)

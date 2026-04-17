@@ -3,7 +3,7 @@ import {useApi} from "../hooks/useApi.ts";
 import {App} from "antd";
 import turfArea from "@turf/area";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {MapArea, Marker} from "../types/ros.ts";
+import {Marker} from "../types/ros.ts";
 import DrawControl from "../components/DrawControl.tsx";
 import Map, {Layer, Source} from 'react-map-gl/mapbox';
 import type {Map as MapboxMap} from 'mapbox-gl';
@@ -17,6 +17,7 @@ import {useConfig} from "../hooks/useConfig.tsx";
 import {useEnv} from "../hooks/useEnv.tsx";
 import {Spinner} from "../components/Spinner.tsx";
 import {MowingFeature, MowingAreaFeature, DockFeatureBase, MowingFeatureBase, NavigationFeature, ObstacleFeature, ActivePathFeature, PathFeature} from "../types/map.ts";
+import {buildMapFeatures} from "./map/utils/buildMapFeatures.ts";
 import {useMapEditHistory} from "./map/hooks/useMapEditHistory.ts";
 import {useMapOffset} from "./map/hooks/useMapOffset.ts";
 import {useManualMode} from "./map/hooks/useManualMode.ts";
@@ -174,25 +175,11 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
     useEffect(() => {
         // Don't rebuild features from stream data while in edit mode —
         // path/plan becoming undefined when streams stop would wipe user edits.
-        console.log("[useEffect map→features] fired, editMap=", editMap, "map=", !!map);
-        if (editMap) {
-            console.log("[useEffect map→features] SKIPPED (editMap=true)");
-            return;
-        }
+        if (editMap) return;
 
         let newFeatures: Record<string, MowingFeature> = {}
         if (map) {
-            console.log("[useEffect map→features] building features from map:",
-                "working_area=", map.working_area?.length ?? 0,
-                "navigation=", map.navigation_areas?.length ?? 0,
-                "dock=", map.dock_x, map.dock_y);
-            const workingAreas = buildFeatures(map.working_area??[], "area")
-            const navigationAreas = buildFeatures(map.navigation_areas??[], "navigation")
-            console.log("[useEffect map→features] built:", Object.keys({...workingAreas, ...navigationAreas}).length, "features");
-            newFeatures = {...workingAreas, ...navigationAreas}
-
-            const dock_lonlat = transpose(offsetX, offsetY, datum, map?.dock_y!!, map?.dock_x!!)
-            newFeatures["dock"] = new DockFeatureBase(dock_lonlat, map?.dock_heading ?? 0);
+            newFeatures = buildMapFeatures(map, offsetX, offsetY, datum);
         }
         if (path?.markers) {
             Object.values<Marker>(path.markers).filter((f) => {
@@ -289,46 +276,6 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
             return next;
         });
     }, []);
-
-    function buildFeatures(areas: MapArea[], type: string) : Record<string, MowingFeatureBase> {
-
-
-        return areas?.flatMap((area, index) : MowingFeatureBase[] => {
-            if (!area.area?.points?.length) {
-                return []
-            }
-
-            const nfeat = type=="area" ? new MowingAreaFeature(type + "-" + index.toString() + "-area-0", index+1)
-                : new NavigationFeature(type + "-" + index.toString() + "-area-0");//, offsetX, offsetY, datum.
-            nfeat.setArea(area, offsetX, offsetY, datum);
-
-            let obstacles:  ObstacleFeature[] = [];
-
-            if ((nfeat instanceof MowingAreaFeature) && (area.obstacles))
-                obstacles = area.obstacles.map((obstacle, oindex) => {
-                const nobst =  new ObstacleFeature(
-                    type + "-" + index.toString() + "-obstacle-" + oindex.toString(),
-                    nfeat
-                );
-                
-                if (obstacle.points)
-                    nobst.transpose(obstacle.points, offsetX, offsetY, datum);
-
-                return nobst;
-
-            })
-            return [nfeat, ...obstacles ]
-        }).reduce((acc, val) :Record<string, MowingFeatureBase> => {
-            if (val.id == undefined) {
-                return acc
-            }
-            acc[val.id] = val;
-            return acc;
-        }, {} as Record<string, MowingFeatureBase>);
-    }
-
-  
-
 
     const {
         handleSaveMap,

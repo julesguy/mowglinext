@@ -12,6 +12,7 @@ import {
 } from "../../../types/map.ts";
 import type {Api, MowgliMapArea, MowgliReplaceMapReq} from "../../../api/Api.ts";
 import {dedupePoints, getQuaternionFromHeading, itranspose} from "../../../utils/map.tsx";
+import {buildMapFeatures} from "../utils/buildMapFeatures.ts";
 
 interface UseMapFilesOptions {
     features: Record<string, MowingFeature>;
@@ -130,39 +131,31 @@ export function useMapFiles({
 
         try {
             await guiApi.mowglinext.putMowglinext(updateMsg);
-            notification.success({
-                message: "Area saved",
-            });
+
+            // Save dock before setEditMap(false) — the mapStream reconnect
+            // replays the cached virtual "map" from Go, which still holds the
+            // pre-save dock until SetDockPose refreshes it.
+            const dockFeature = features["dock"];
+            if (dockFeature instanceof DockFeatureBase) {
+                const coords = dockFeature.getCoordinates();
+                const heading = dockFeature.getHeading();
+                const rosCoords = itranspose(offsetX, offsetY, datum, coords[1], coords[0]);
+                const q = getQuaternionFromHeading(heading);
+                await guiApi.mowglinext.mapDockingCreate({
+                    docking_pose: {
+                        orientation: {x: q.x!!, y: q.y!!, z: q.z!!, w: q.w!!},
+                        position: {x: rosCoords[0], y: rosCoords[1], z: 0},
+                    },
+                });
+            }
+
+            notification.success({message: "Area saved"});
             setHasUnsavedChanges(false);
             setEditMap(false);
         } catch (e: any) {
             notification.error({
                 message: "Failed to save area",
                 description: e.message,
-            });
-        }
-
-        // Save dock position from the edited features state (not the stale map object)
-        const dockFeature = features["dock"];
-        if (dockFeature instanceof DockFeatureBase) {
-            const coords = dockFeature.getCoordinates();
-            const rosCoords = itranspose(offsetX, offsetY, datum, coords[1], coords[0]);
-            const heading = dockFeature.getHeading();
-            const quaternionFromHeading = getQuaternionFromHeading(heading);
-            await guiApi.mowglinext.mapDockingCreate({
-                docking_pose: {
-                    orientation: {
-                        x: quaternionFromHeading.x!!,
-                        y: quaternionFromHeading.y!!,
-                        z: quaternionFromHeading.z!!,
-                        w: quaternionFromHeading.w!!,
-                    },
-                    position: {
-                        x: rosCoords[0],
-                        y: rosCoords[1],
-                        z: 0,
-                    },
-                },
             });
         }
     }
@@ -195,24 +188,12 @@ export function useMapFiles({
                 const content = event.target?.result as string;
                 const parts = content.split(",");
                 const newMap = JSON.parse(atob(parts[1])) as MapType;
-                console.log("[restore] parsed map:", JSON.stringify(newMap, null, 2));
-                console.log("[restore] working_area count:", newMap.working_area?.length ?? 0);
-                console.log("[restore] navigation_areas count:", newMap.navigation_areas?.length ?? 0);
-                if (newMap.working_area) {
-                    newMap.working_area.forEach((area, i) => {
-                        console.log(`[restore] area[${i}] name=${area.name} points=${area.area?.points?.length ?? 0} obstacles=${area.obstacles?.length ?? 0}`);
-                    });
-                }
-                console.log("[restore] dock: x=${newMap.dock_x} y=${newMap.dock_y} heading=${newMap.dock_heading}");
-                // Set map first while editMap is still false so the
-                // useEffect rebuilds features from the restored data,
-                // then enter edit mode on the next tick.
+                // Build features here instead of letting the useEffect do it:
+                // React batches setMap+setEditMap, so the effect would only
+                // fire with editMap=true and bail out.
                 setMap(newMap);
-                console.log("[restore] setMap done, editMap should still be false");
-                setTimeout(() => {
-                    console.log("[restore] entering edit mode");
-                    setEditMap(true);
-                }, 0);
+                setFeatures(buildMapFeatures(newMap, offsetX, offsetY, datum));
+                setEditMap(true);
             });
             reader.readAsDataURL(file);
         });

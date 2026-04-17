@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"math"
 	"net/http"
 	"time"
 
@@ -167,9 +168,12 @@ func SetDockingPointRoute(group *gin.RouterGroup, provider types.IRosProvider) {
 		err = provider.CallService(ctx, "/map_server_node/set_docking_point", &CallReq, &mowgli.SetDockingPointRes{}, "mowgli_interfaces/srv/SetDockingPoint")
 		if err != nil {
 			c.JSON(500, ErrorResponse{Error: err.Error()})
-		} else {
-			c.JSON(200, OkResponse{})
+			return
 		}
+		q := CallReq.DockingPose.Orientation
+		heading := math.Atan2(2*(q.W*q.Z+q.X*q.Y), 1-2*(q.Y*q.Y+q.Z*q.Z))
+		provider.SetDockPose(CallReq.DockingPose.Position.X, CallReq.DockingPose.Position.Y, heading)
+		c.JSON(200, OkResponse{})
 	})
 }
 
