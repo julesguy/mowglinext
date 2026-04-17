@@ -28,4 +28,8 @@ type IRosProvider interface {
 	// Publish sends msg to the named ROS2 topic via foxglove_bridge.
 	// msgType is the ROS2 message type string (e.g. "geometry_msgs/msg/Twist").
 	Publish(topic string, msgType string, msg interface{}) error
+
+	// SetDockPose updates the cached dock pose and refreshes the virtual
+	// "map" topic so reconnecting subscribers don't replay a stale dock.
+	SetDockPose(x, y, heading float64)
 }

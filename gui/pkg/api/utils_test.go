@@ -49,6 +49,19 @@ func TestUnmarshalROSMessage(t *testing.T) {
 		assert.InDelta(t, 3.14, msg.Value, 0.001)
 	})
 
+	t.Run("snake_case JSON to PascalCase struct", func(t *testing.T) {
+		jsonBody := `{"name": "test-area", "is_navigation_area": true, "value": 2.71}`
+		reader := io.NopCloser(strings.NewReader(jsonBody))
+
+		var msg TestMsg
+		err := unmarshalROSMessage[*TestMsg](reader, &msg)
+		require.NoError(t, err)
+
+		assert.Equal(t, "test-area", msg.Name)
+		assert.True(t, msg.IsNavigationArea)
+		assert.InDelta(t, 2.71, msg.Value, 0.001)
+	})
+
 	t.Run("PascalCase JSON to PascalCase struct", func(t *testing.T) {
 		jsonBody := `{"Name": "area2", "IsNavigationArea": false, "Value": 1.0}`
 		reader := io.NopCloser(strings.NewReader(jsonBody))

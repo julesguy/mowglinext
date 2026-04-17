@@ -415,6 +415,18 @@ func (r *RosProvider) pollMap() {
 	r.fanOut("map", data)
 }
 
+// SetDockPose updates the cached dock pose and re-polls the map so the
+// "map" last-message replay reflects the new dock immediately.
+func (r *RosProvider) SetDockPose(x, y, heading float64) {
+	r.mtx.Lock()
+	r.dockPoseSet = true
+	r.dockX = x
+	r.dockY = y
+	r.dockHeading = heading
+	r.mtx.Unlock()
+	r.pollMap()
+}
+
 
 // ---------------------------------------------------------------------------
 // IRosProvider implementation
