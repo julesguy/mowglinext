@@ -67,7 +67,7 @@ fi
 export FOXGLOVE_URL="${FOXGLOVE_URL:-ws://localhost:8765}"
 export MOWER_CONFIG_FILE="${MOWER_CONFIG_FILE:-$INSTALL_DIR/config/om/mower_config.sh}"
 export MOWER_YAML_CONFIG_FILE="${MOWER_YAML_CONFIG_FILE:-$INSTALL_DIR/config/mowgli/mowgli_robot.yaml}"
-export DB_PATH="${DB_PATH:-$INSTALL_DIR/config/db}"
+export DB_PATH="${DB_PATH:-$SCRIPT_DIR/.db}"
 export WEB_DIR="${WEB_DIR:-$SCRIPT_DIR/web/dist}"
 export DOCKER_HOST="${DOCKER_HOST:-unix:///var/run/docker.sock}"
 
