@@ -23,7 +23,10 @@ if [ ${#missing[@]} -gt 0 ]; then
   read -r answer
   if [[ "${answer,,}" != "n" ]]; then
     sudo apt update
-    for dep in "${missing[@]}"; do
+    # Install in order: go, node, then yarn (yarn needs node/corepack)
+    for dep in go node yarn; do
+      # Skip if not in the missing list
+      printf '%s\n' "${missing[@]}" | grep -qx "$dep" || continue
       case "$dep" in
         go)
           echo "Installing Go..."
@@ -36,7 +39,7 @@ if [ ${#missing[@]} -gt 0 ]; then
           ;;
         yarn)
           echo "Installing Yarn..."
-          sudo npm install -g yarn
+          corepack enable
           ;;
       esac
     done
