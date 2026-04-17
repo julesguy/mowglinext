@@ -70,6 +70,7 @@ export MOWER_YAML_CONFIG_FILE="${MOWER_YAML_CONFIG_FILE:-$INSTALL_DIR/config/mow
 export DB_PATH="${DB_PATH:-$SCRIPT_DIR/.db}"
 export WEB_DIR="${WEB_DIR:-$SCRIPT_DIR/web/dist}"
 export DOCKER_HOST="${DOCKER_HOST:-unix:///var/run/docker.sock}"
+export MQTT_ENABLED="${MQTT_ENABLED:-false}"
 
 # Build if binary is missing or older than source
 if [ ! -f "$SCRIPT_DIR/mowglinext" ] || \
