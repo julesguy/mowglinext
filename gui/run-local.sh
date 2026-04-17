@@ -94,7 +94,4 @@ echo "  DB_PATH:               $DB_PATH"
 echo "  WEB_DIR:               $WEB_DIR"
 echo ""
 
-trap 'kill $PID 2>/dev/null; exit 0' INT TERM
-"$SCRIPT_DIR/mowglinext" &
-PID=$!
-wait $PID
+"$SCRIPT_DIR/mowglinext"
