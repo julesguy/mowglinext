@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Run the GUI natively on the Pi with the same config as the Docker container.
+# Usage: cd gui && ./run-local.sh
+#
+# Prerequisites:
+#   go build -o mowglinext && cd web && yarn && yarn build && cd ..
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL_DIR="$(cd "$SCRIPT_DIR/../install" && pwd)"
+
+# Stop the Docker GUI container if running (same port conflict)
+if docker inspect -f '{{.State.Status}}' mowgli-gui 2>/dev/null | grep -q running; then
+  echo "mowgli-gui container is running (port 80 conflict)."
+  echo -n "Stop it? [Y/n]: "
+  read -r answer
+  if [[ "${answer,,}" != "n" ]]; then
+    docker stop mowgli-gui >/dev/null
+    echo "Stopped mowgli-gui"
+  else
+    echo "Aborting — can't bind to the same port."
+    exit 1
+  fi
+fi
+
+export FOXGLOVE_URL="${FOXGLOVE_URL:-ws://localhost:8765}"
+export MOWER_CONFIG_FILE="${MOWER_CONFIG_FILE:-$INSTALL_DIR/config/om/mower_config.sh}"
+export MOWER_YAML_CONFIG_FILE="${MOWER_YAML_CONFIG_FILE:-$INSTALL_DIR/config/mowgli/mowgli_robot.yaml}"
+export DB_PATH="${DB_PATH:-$INSTALL_DIR/config/db}"
+export WEB_DIR="${WEB_DIR:-$SCRIPT_DIR/web/dist}"
+export DOCKER_HOST="${DOCKER_HOST:-unix:///var/run/docker.sock}"
+
+# Build if binary is missing or older than source
+if [ ! -f "$SCRIPT_DIR/mowglinext" ] || \
+   [ "$(find "$SCRIPT_DIR" -name '*.go' -newer "$SCRIPT_DIR/mowglinext" 2>/dev/null | head -1)" ]; then
+  echo "Building Go binary..."
+  (cd "$SCRIPT_DIR" && go build -o mowglinext)
+fi
+
+# Build frontend if dist is missing
+if [ ! -d "$SCRIPT_DIR/web/dist" ]; then
+  echo "Building frontend..."
+  (cd "$SCRIPT_DIR/web" && yarn && yarn build)
+fi
+
+mkdir -p "$DB_PATH"
+
+echo "Starting mowglinext GUI..."
+echo "  FOXGLOVE_URL:          $FOXGLOVE_URL"
+echo "  MOWER_CONFIG_FILE:     $MOWER_CONFIG_FILE"
+echo "  MOWER_YAML_CONFIG_FILE: $MOWER_YAML_CONFIG_FILE"
+echo "  DB_PATH:               $DB_PATH"
+echo "  WEB_DIR:               $WEB_DIR"
+echo ""
+
+exec "$SCRIPT_DIR/mowglinext"
