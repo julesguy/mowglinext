@@ -174,12 +174,21 @@ export const MapPage: React.FC<{compact?: boolean}> = ({compact = false}) => {
     useEffect(() => {
         // Don't rebuild features from stream data while in edit mode —
         // path/plan becoming undefined when streams stop would wipe user edits.
-        if (editMap) return;
+        console.log("[useEffect map→features] fired, editMap=", editMap, "map=", !!map);
+        if (editMap) {
+            console.log("[useEffect map→features] SKIPPED (editMap=true)");
+            return;
+        }
 
         let newFeatures: Record<string, MowingFeature> = {}
         if (map) {
+            console.log("[useEffect map→features] building features from map:",
+                "working_area=", map.working_area?.length ?? 0,
+                "navigation=", map.navigation_areas?.length ?? 0,
+                "dock=", map.dock_x, map.dock_y);
             const workingAreas = buildFeatures(map.working_area??[], "area")
             const navigationAreas = buildFeatures(map.navigation_areas??[], "navigation")
+            console.log("[useEffect map→features] built:", Object.keys({...workingAreas, ...navigationAreas}).length, "features");
             newFeatures = {...workingAreas, ...navigationAreas}
 
             const dock_lonlat = transpose(offsetX, offsetY, datum, map?.dock_y!!, map?.dock_x!!)

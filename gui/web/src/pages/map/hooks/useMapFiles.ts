@@ -195,11 +195,24 @@ export function useMapFiles({
                 const content = event.target?.result as string;
                 const parts = content.split(",");
                 const newMap = JSON.parse(atob(parts[1])) as MapType;
+                console.log("[restore] parsed map:", JSON.stringify(newMap, null, 2));
+                console.log("[restore] working_area count:", newMap.working_area?.length ?? 0);
+                console.log("[restore] navigation_areas count:", newMap.navigation_areas?.length ?? 0);
+                if (newMap.working_area) {
+                    newMap.working_area.forEach((area, i) => {
+                        console.log(`[restore] area[${i}] name=${area.name} points=${area.area?.points?.length ?? 0} obstacles=${area.obstacles?.length ?? 0}`);
+                    });
+                }
+                console.log("[restore] dock: x=${newMap.dock_x} y=${newMap.dock_y} heading=${newMap.dock_heading}");
                 // Set map first while editMap is still false so the
                 // useEffect rebuilds features from the restored data,
                 // then enter edit mode on the next tick.
                 setMap(newMap);
-                setTimeout(() => setEditMap(true), 0);
+                console.log("[restore] setMap done, editMap should still be false");
+                setTimeout(() => {
+                    console.log("[restore] entering edit mode");
+                    setEditMap(true);
+                }, 0);
             });
             reader.readAsDataURL(file);
         });
