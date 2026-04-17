@@ -1,4 +1,5 @@
 /db
+/.db
 /node_modules
 package-lock.json
 web/screenshots/desktop-dashboard.png
