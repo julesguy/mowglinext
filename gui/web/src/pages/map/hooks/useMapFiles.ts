@@ -186,7 +186,6 @@ export function useMapFiles({
         input.style.display = "none";
         document.body.appendChild(input);
         input.addEventListener('change', (event) => {
-            setEditMap(true);
             const file = (event as unknown as ChangeEvent<HTMLInputElement>).target?.files?.[0];
             if (!file) {
                 return;
@@ -196,7 +195,11 @@ export function useMapFiles({
                 const content = event.target?.result as string;
                 const parts = content.split(",");
                 const newMap = JSON.parse(atob(parts[1])) as MapType;
+                // Set map first while editMap is still false so the
+                // useEffect rebuilds features from the restored data,
+                // then enter edit mode on the next tick.
                 setMap(newMap);
+                setTimeout(() => setEditMap(true), 0);
             });
             reader.readAsDataURL(file);
         });
