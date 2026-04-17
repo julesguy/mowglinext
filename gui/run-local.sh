@@ -10,6 +10,43 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="$(cd "$SCRIPT_DIR/../install" && pwd)"
 
+# ── Check dependencies ────────────────────────────────────────────────────────
+
+missing=()
+command -v go   >/dev/null 2>&1 || missing+=(go)
+command -v node >/dev/null 2>&1 || missing+=(node)
+command -v yarn >/dev/null 2>&1 || missing+=(yarn)
+
+if [ ${#missing[@]} -gt 0 ]; then
+  echo "Missing dependencies: ${missing[*]}"
+  echo -n "Install them? [Y/n]: "
+  read -r answer
+  if [[ "${answer,,}" != "n" ]]; then
+    sudo apt update
+    for dep in "${missing[@]}"; do
+      case "$dep" in
+        go)
+          echo "Installing Go..."
+          sudo apt install -y golang
+          ;;
+        node)
+          echo "Installing Node.js..."
+          curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
+          sudo apt install -y nodejs
+          ;;
+        yarn)
+          echo "Installing Yarn..."
+          sudo npm install -g yarn
+          ;;
+      esac
+    done
+  else
+    echo "Aborting — missing: ${missing[*]}"
+    exit 1
+  fi
+fi
+
+# ── Stop Docker GUI if running ───────────────────────────────────────────────
 # Stop the Docker GUI container if running (same port conflict)
 if docker inspect -f '{{.State.Status}}' mowgli-gui 2>/dev/null | grep -q running; then
   echo "mowgli-gui container is running (port 80 conflict)."
